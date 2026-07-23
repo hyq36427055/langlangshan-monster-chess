@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#182338" />
+    <meta name="description" content="浪浪山妖怪棋电子版，支持本地双人、人机对战和联网房间。" />
+    <meta property="og:title" content="浪浪山·妖怪棋" />
+    <meta property="og:description" content="来一局浪浪山妖怪棋，支持人机与好友联网对战。" />
+    <meta property="og:type" content="website" />
+    <title>浪浪山·妖怪棋</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-block">
+          <p class="eyebrow">双人 / 人机策略棋</p>
+          <h1>浪浪山·妖怪棋</h1>
+        </div>
+        <div class="top-actions" aria-label="对局工具">
+          <button class="icon-button" id="undoButton" type="button" title="悔棋" aria-label="悔棋">
+            <span aria-hidden="true">↶</span>
+          </button>
+          <button class="icon-button" id="resetButton" type="button" title="重新开始" aria-label="重新开始">
+            <span aria-hidden="true">↻</span>
+          </button>
+          <button class="icon-button" id="rulesButton" type="button" title="查看规则" aria-label="查看规则">
+            <span aria-hidden="true">?</span>
+          </button>
+          <button class="icon-button" id="shareButton" type="button" title="分享给好友" aria-label="分享给好友">
+            <svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <path d="m8.6 10.5 6.8-4"></path>
+              <path d="m8.6 13.5 6.8 4"></path>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="game-layout">
+        <section class="board-section" aria-label="妖怪棋棋盘">
+          <div class="turn-banner" id="turnBanner">
+            <span class="turn-dot" aria-hidden="true"></span>
+            <span id="turnLabel">赤霞方行棋</span>
+            <span class="turn-hint" id="turnHint">请选择一枚棋子</span>
+            <div class="sound-control" id="soundControl">
+              <button
+                class="sound-toggle"
+                id="soundToggle"
+                type="button"
+                title="调整音量"
+                aria-label="调整音量"
+                aria-controls="volumePanel"
+                aria-expanded="false"
+              >
+                <svg class="sound-icon" id="soundIcon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M11 5 6 9H2v6h4l5 4z"></path>
+                  <path class="sound-wave sound-wave-near" d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+                  <path class="sound-wave sound-wave-far" d="M19 5a10 10 0 0 1 0 14"></path>
+                  <path class="sound-muted-mark" d="m16 9 5 5m0-5-5 5"></path>
+                </svg>
+              </button>
+              <div class="volume-panel" id="volumePanel" hidden>
+                <div class="volume-heading">
+                  <span>音效音量</span>
+                  <output id="volumeValue" for="volumeSlider">65%</output>
+                </div>
+                <div class="volume-row">
+                  <button class="volume-mute-button" id="volumeMuteButton" type="button">静音</button>
+                  <label class="visually-hidden" for="volumeSlider">音效音量</label>
+                  <input id="volumeSlider" type="range" min="0" max="100" step="5" value="65" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="board-frame">
+            <div class="board-edge board-edge-top" aria-hidden="true">对方山洞</div>
+            <div class="board" id="board" role="grid" aria-label="7列9行妖怪棋棋盘"></div>
+            <div class="board-edge board-edge-bottom" aria-hidden="true">我方山洞</div>
+          </div>
+
+          <div class="last-move-summary" id="lastMoveSummary" aria-live="polite">
+            <span class="trail-key" aria-hidden="true"></span>
+            <span id="lastMoveText">上一手：暂无</span>
+          </div>
+
+          <div class="mobile-actions" aria-label="移动端对局工具">
+            <button id="mobileUndoButton" type="button"><span aria-hidden="true">↶</span> 悔棋</button>
+            <button id="mobileRulesButton" type="button"><span aria-hidden="true">?</span> 规则</button>
+            <button id="mobileResetButton" type="button"><span aria-hidden="true">↻</span> 重开</button>
+            <button id="mobileShareButton" type="button">
+              <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <path d="m8.6 10.5 6.8-4"></path>
+                <path d="m8.6 13.5 6.8 4"></path>
+              </svg>
+              分享
+            </button>
+          </div>
+        </section>
+
+        <aside class="side-panel">
+          <section class="match-setting">
+            <div class="setting-row">
+              <div>
+                <p class="section-label">对战模式</p>
+                <p id="gameModeCopy">你执赤霞方，电脑执青山方</p>
+              </div>
+              <div class="segmented" role="group" aria-label="对战模式">
+                <button type="button" data-game-mode="local">本地双人</button>
+                <button class="selected" type="button" data-game-mode="ai">人机对战</button>
+                <button type="button" data-game-mode="online">联网房间</button>
+              </div>
+            </div>
+            <div class="setting-row" id="difficultySetting">
+              <div>
+                <p class="section-label">AI 难度</p>
+                <p id="difficultyCopy">会预判对手下一步，兼顾吃子与守洞</p>
+              </div>
+              <div class="segmented difficulty-segmented" role="group" aria-label="AI难度">
+                <button type="button" data-ai-difficulty="easy">简单</button>
+                <button class="selected" type="button" data-ai-difficulty="normal">普通</button>
+                <button type="button" data-ai-difficulty="hard">困难</button>
+              </div>
+            </div>
+
+            <div class="online-room-setting" id="onlineRoomSetting" hidden>
+              <div class="room-lobby" id="roomLobby">
+                <button class="primary-button room-create-button" id="createRoomButton" type="button">创建房间</button>
+                <div class="room-divider"><span>或</span></div>
+                <div class="room-join-row">
+                  <label class="visually-hidden" for="roomCodeInput">输入6位房间号</label>
+                  <input id="roomCodeInput" type="text" maxlength="6" inputmode="text" autocomplete="off" placeholder="6位房间号" />
+                  <button class="secondary-button" id="joinRoomButton" type="button">加入</button>
+                </div>
+              </div>
+
+              <div class="room-connection" id="roomConnection" hidden>
+                <div class="room-status-line">
+                  <span class="connection-dot" id="connectionDot" aria-hidden="true"></span>
+                  <div>
+                    <strong id="connectionLabel">正在连接</strong>
+                    <span id="connectionCopy">请稍候</span>
+                  </div>
+                </div>
+                <div class="room-code-block" id="roomCodeBlock">
+                  <span>房间号</span>
+                  <b id="roomCodeDisplay">------</b>
+                </div>
+                <div class="room-buttons">
+                  <button class="secondary-button" id="copyInviteButton" type="button">复制邀请</button>
+                  <button class="secondary-button danger-button" id="leaveRoomButton" type="button">退出房间</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="status-section">
+            <p class="section-label">当前对局</p>
+            <div class="player-status active" id="player1Status">
+              <span class="player-mark player-one" aria-hidden="true"></span>
+              <div>
+                <strong id="player1Name">你·赤霞方</strong>
+                <span id="player1Subtitle">向上攻入对方山洞</span>
+              </div>
+              <b id="player1Count">8</b>
+            </div>
+            <div class="player-status" id="player2Status">
+              <span class="player-mark player-two" aria-hidden="true"></span>
+              <div>
+                <strong id="player2Name">电脑·青山方</strong>
+                <span id="player2Subtitle">普通难度，向下攻入山洞</span>
+              </div>
+              <b id="player2Count">8</b>
+            </div>
+          </section>
+
+          <section class="rule-setting">
+            <div>
+              <p class="section-label">同类相吃</p>
+              <p>相同棋子可以互吃，主动进攻方吃掉对方并保留</p>
+            </div>
+          </section>
+
+          <section class="legend-section">
+            <p class="section-label">战力顺序</p>
+            <div class="rank-list" id="rankList"></div>
+            <p class="rank-note">小猪妖可反杀黄眉怪；黄眉怪主动攻击小猪妖也会被反杀。</p>
+          </section>
+
+          <section class="history-section">
+            <div class="history-heading">
+              <p class="section-label">行棋记录</p>
+              <span id="moveCount">0 回合</span>
+            </div>
+            <ol id="moveHistory" aria-live="polite">
+              <li class="empty-history">对局开始，赤霞方先行</li>
+            </ol>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="rulesModal" hidden>
+      <section class="modal rules-modal" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
+        <header class="modal-header">
+          <div>
+            <p class="eyebrow">玩法说明</p>
+            <h2 id="rulesTitle">妖怪棋规则</h2>
+          </div>
+          <button class="icon-button close-modal" type="button" title="关闭" aria-label="关闭规则">×</button>
+        </header>
+        <div class="rules-content">
+          <div class="rule-group">
+            <span>1</span>
+            <p><strong>移动</strong>每回合选一枚棋子，只能向上、下、左、右走一格，不能斜走，也不能进入自己的山洞。</p>
+          </div>
+          <div class="rule-group">
+            <span>2</span>
+            <p><strong>吃子</strong>默认强者可吃弱者。相同棋子可以互吃，主动进攻方保留。小猪妖能反杀黄眉怪，黄眉怪不能吃小猪妖。</p>
+          </div>
+          <div class="rule-group">
+            <span>3</span>
+            <p><strong>浪浪山</strong>只有小猪妖可以进入。虎大王和豹大人可横向或纵向飞过整座山；路线上有小猪妖时会被阻挡。</p>
+          </div>
+          <div class="rule-group">
+            <span>4</span>
+            <p><strong>陷阱</strong>对方棋子进入我方陷阱后，我方任意棋子都可吃掉它。若未及时拦截，对方下回合可离开陷阱。</p>
+          </div>
+          <div class="rule-group">
+            <span>5</span>
+            <p><strong>获胜</strong>任意一枚妖怪棋进入对方山洞，立即获胜。</p>
+          </div>
+          <div class="rule-group">
+            <span>6</span>
+            <p><strong>人机对战</strong>你执赤霞方先行，电脑执青山方。简单难度偏随机，普通难度会预判下一步，困难难度最多进行六层推演，会主动抢攻、吃子并持续压迫山洞。</p>
+          </div>
+          <div class="rule-group">
+            <span>7</span>
+            <p><strong>联网房间</strong>房主执赤霞方，加入者执青山方。房主创建房间后，将六位房间号或邀请链接发给另一位玩家；房主页面需保持打开。</p>
+          </div>
+        </div>
+        <button class="primary-button close-modal" type="button">开始对局</button>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="victoryModal" hidden>
+      <section class="modal victory-modal" role="dialog" aria-modal="true" aria-labelledby="victoryTitle">
+        <div class="victory-seal" aria-hidden="true">胜</div>
+        <p class="eyebrow">对局结束</p>
+        <h2 id="victoryTitle">你·赤霞方获胜</h2>
+        <p id="victoryCopy">成功攻入对方山洞。</p>
+        <div class="victory-actions">
+          <button class="secondary-button" id="closeVictoryButton" type="button">查看棋局</button>
+          <button class="primary-button" id="playAgainButton" type="button">再来一局</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="victory-effect-layer" id="victoryEffectLayer" aria-hidden="true"></div>
+
+    <script src="game.js"></script>
+  </body>
+</html>
